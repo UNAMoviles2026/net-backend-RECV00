@@ -15,6 +15,13 @@ public class ReservationsController : ControllerBase
     _reservationService = reservationService;
   }
 
+  [HttpGet]
+  public async Task<IActionResult> GetByDate([FromQuery] DateOnly date)
+  {
+    var reservations = await _reservationService.GetByDateAsync(date);
+    return Ok(reservations);
+  }
+
   [HttpPost]
   public async Task<IActionResult> Create([FromBody] CreateReservationRequest request)
   {
