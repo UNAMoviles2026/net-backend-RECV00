@@ -26,9 +26,6 @@ paths:
                 items:
                   $ref: '#/components/schemas/ReservationResponse'
 
-        '400':
-          description: Invalid date format or missing query parameter
-
 components:
   schemas:
     ReservationResponse:
