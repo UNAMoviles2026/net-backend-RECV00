@@ -20,6 +20,13 @@ public class ReservationRepository : IReservationRepository
     return reservation;
   }
 
+  public async Task<Reservation?> GetByIdAsync(Guid id)
+  {
+    return await _context.Reservations
+        .AsNoTracking()
+        .FirstOrDefaultAsync(r => r.Id == id);
+  }
+
   public async Task<List<Reservation>> GetByClassroomAndDateAsync(Guid classroomId, DateOnly date)
   {
     return await _context.Reservations
@@ -33,13 +40,24 @@ public class ReservationRepository : IReservationRepository
     return await _context.Reservations
         .AsNoTracking()
         .Where(r => r.Date == date)
+        .OrderBy(r => r.StartTime)
         .ToListAsync();
   }
 
-  public async Task<bool> DeleteAsync(Guid id)
+  public async Task<List<Reservation>> GetByUserIdAsync(Guid userId)
   {
-    var reservation = await _context.Reservations.FindAsync(id);
-    if (reservation == null)
+    return await _context.Reservations
+        .AsNoTracking()
+        .Where(r => r.UserId == userId)
+        .OrderBy(r => r.Date)
+        .ThenBy(r => r.StartTime)
+        .ToListAsync();
+  }
+
+  public async Task<bool> DeleteByIdAsync(Guid id)
+  {
+    var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == id);
+    if (reservation is null)
     {
       return false;
     }
