@@ -42,29 +42,6 @@ namespace reservations_api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Classrooms");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Capacity = 30,
-                            Location = "Building A - First Floor",
-                            Name = "A-101"
-                        },
-                        new
-                        {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            Capacity = 40,
-                            Location = "Building B - Second Floor",
-                            Name = "B-202"
-                        },
-                        new
-                        {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            Capacity = 25,
-                            Location = "Engineering Labs",
-                            Name = "LAB-01"
-                        });
                 });
 
             modelBuilder.Entity("reservations_api.Models.Entities.Reservation", b =>
@@ -85,90 +62,9 @@ namespace reservations_api.Migrations
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ClassroomId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Reservations");
-                });
-
-            modelBuilder.Entity("reservations_api.Models.Entities.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("DeviceToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-                            Email = "rachel@demo.edu",
-                            Name = "Rachel Student",
-                            Password = "123456"
-                        },
-                        new
-                        {
-                            Id = new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-                            Email = "alex@demo.edu",
-                            Name = "Alex Student",
-                            Password = "123456"
-                        });
-                });
-
-            modelBuilder.Entity("reservations_api.Models.Entities.Reservation", b =>
-                {
-                    b.HasOne("reservations_api.Models.Entities.Classroom", "Classroom")
-                        .WithMany("Reservations")
-                        .HasForeignKey("ClassroomId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("reservations_api.Models.Entities.User", "User")
-                        .WithMany("Reservations")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Classroom");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("reservations_api.Models.Entities.Classroom", b =>
-                {
-                    b.Navigation("Reservations");
-                });
-
-            modelBuilder.Entity("reservations_api.Models.Entities.User", b =>
-                {
-                    b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618
         }

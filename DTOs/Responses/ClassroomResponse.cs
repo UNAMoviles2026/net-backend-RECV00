@@ -1,6 +1,6 @@
 namespace reservations_api.DTOs.Responses;
 
-public sealed class ClassroomResponse
+public class ClassroomResponse
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;

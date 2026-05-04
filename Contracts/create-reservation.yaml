@@ -7,7 +7,7 @@ paths:
   /api/reservations:
     post:
       summary: Create a reservation
-      description: Validates payload (422), references (400), and classroom availability (409).
+      description: Creates a classroom reservation for a specific date and time range
       requestBody:
         required: true
         content:
@@ -15,56 +15,31 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateReservationRequest'
       responses:
-        '200':
+        '201':
           description: Reservation created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReservationResponse'
         '400':
-          description: Invalid business rule (e.g. user or classroom reference not found)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Validation failed (data annotations or cross-field rules)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationProblemDetails'
+          description: Invalid request
         '409':
-          description: Time conflict with another reservation in the same classroom and date
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Unexpected server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: Time conflict with another reservation
 
 components:
   schemas:
     CreateReservationRequest:
       type: object
       required:
-        - userId
         - classroomId
         - date
         - startTime
         - endTime
       properties:
-        userId:
-          type: string
-          format: uuid
-          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         classroomId:
           type: string
           format: uuid
-          example: "11111111-1111-1111-1111-111111111111"
+          example: "a3f1c2d4-1234-4c5d-9f1a-abcdef123456"
         date:
           type: string
           format: date
@@ -84,9 +59,6 @@ components:
         id:
           type: string
           format: uuid
-        userId:
-          type: string
-          format: uuid
         classroomId:
           type: string
           format: uuid
@@ -99,30 +71,3 @@ components:
         endTime:
           type: string
           format: time
-
-    ErrorResponse:
-      type: object
-      properties:
-        message:
-          type: string
-
-    ValidationProblemDetails:
-      type: object
-      description: ASP.NET Core validation problem details (RFC 7807-style subset)
-      properties:
-        type:
-          type: string
-        title:
-          type: string
-        status:
-          type: integer
-        detail:
-          type: string
-        instance:
-          type: string
-        errors:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              type: string

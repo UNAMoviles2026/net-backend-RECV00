@@ -1,81 +1,69 @@
 using Microsoft.AspNetCore.Mvc;
 using reservations_api.DTOs.Requests;
-using reservations_api.DTOs.Responses;
 using reservations_api.Services;
 
 namespace reservations_api.Controllers;
 
 [ApiController]
-[Produces("application/json")]
 [Route("api/[controller]")]
 public class ReservationsController : ControllerBase
 {
-    private readonly IReservationService _reservationService;
+  private readonly IReservationService _reservationService;
 
-    public ReservationsController(IReservationService reservationService)
+  public ReservationsController(IReservationService reservationService)
+  {
+    _reservationService = reservationService;
+  }
+
+  [HttpGet]
+  public async Task<IActionResult> GetByDate([FromQuery] DateOnly date)
+  {
+    var reservations = await _reservationService.GetByDateAsync(date);
+    return Ok(reservations);
+  }
+
+  [HttpPost]
+  public async Task<IActionResult> Create([FromBody] CreateReservationRequest request)
+  {
+    if (!ModelState.IsValid)
     {
-        _reservationService = reservationService;
+      return ValidationProblem(ModelState);
     }
 
-    /// <summary>List reservations for a calendar date (ordered by start time).</summary>
-    [HttpGet]
-    [ProducesResponseType(typeof(List<ReservationResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<List<ReservationResponse>>> GetByDate([FromQuery] DateOnly? date)
+    try
     {
-        if (date is null)
-        {
-            return BadRequest(new ErrorResponse { Message = "Query parameter 'date' is required (YYYY-MM-DD)." });
-        }
-
-        var reservations = await _reservationService.GetByDateAsync(date.Value);
-        return Ok(reservations);
+      var createdReservation = await _reservationService.CreateAsync(request);
+      return CreatedAtAction(
+          nameof(Create),
+          createdReservation);
     }
-
-    /// <summary>List all reservations for a specific user (ordered by date, then start time).</summary>
-    [HttpGet("user/{userId:guid}")]
-    [ProducesResponseType(typeof(List<ReservationResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<List<ReservationResponse>>> GetByUserId(Guid userId)
+    catch (InvalidOperationException ex)
     {
-        var reservations = await _reservationService.GetByUserIdAsync(userId);
-        return Ok(reservations);
-    }
+      if (ex.Message.Contains("StartTime"))
+      {
+        return BadRequest(new { message = ex.Message });
+      }
 
-    /// <summary>Get a single reservation by id.</summary>
-    [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(ReservationResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ReservationResponse>> GetById(Guid id)
-    {
-        var reservation = await _reservationService.GetByIdAsync(id);
-        return Ok(reservation);
-    }
+      if (ex.Message.Contains("Time conflict"))
+      {
+        return Conflict(new { message = ex.Message });
+      }
 
-    /// <summary>Create a reservation after validating references and classroom availability.</summary>
-    [HttpPost]
-    [ProducesResponseType(typeof(ReservationResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status422UnprocessableEntity)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ReservationResponse>> Create([FromBody] CreateReservationRequest request)
-    {
-        var createdReservation = await _reservationService.CreateAsync(request);
-        return Ok(createdReservation);
+      throw;
     }
+  }
 
-    /// <summary>Delete a reservation by id.</summary>
-    [HttpDelete("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteById(Guid id)
+  [HttpDelete("{id}")]
+  public async Task<IActionResult> Delete(Guid id)
+  {
+    try
     {
-        await _reservationService.DeleteByIdAsync(id);
-        return NoContent();
+      await _reservationService.DeleteAsync(id);
+      return NoContent();
     }
+    catch (InvalidOperationException ex)
+    {
+      return NotFound(new { message = ex.Message });
+    }
+  }
 }
